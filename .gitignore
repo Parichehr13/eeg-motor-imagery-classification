@@ -11,12 +11,8 @@ __pycache__/
 .DS_Store
 Thumbs.db
 .vscode/
+.idea/
 
-# Generated outputs
-models/*.keras
-models/*.weights.h5
-results/figures/*.png
-results/metrics/*.json
-results/metrics/*.csv
-results/metrics/*.md
-results/metrics/*.txt
+# Optional local experiment scratch space
+results/experiments/
+models/experiments/

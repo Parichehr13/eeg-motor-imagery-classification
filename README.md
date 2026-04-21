@@ -1,68 +1,60 @@
 # EEG Motor Imagery Classification with EEGNet
 
-This repository turns a course exercise into a small, standalone deep-learning project for classifying single-trial EEG motor imagery using EEGNet. It keeps the scope intentionally modest: one provided subject from BCI Competition IV 2a, one well-known architecture, reproducible training outputs, and a lightweight spatial-filter interpretation.
+Compact deep-learning project for 4-class EEG motor imagery classification using EEGNet on BCI Competition IV 2a subject data. The repository includes a reproducible training pipeline, saved evaluation artifacts, and a lightweight spatial-filter analysis for channel-level interpretation.
 
-## Project overview
+## Overview
 
-- **Task:** classify 4 imagined movements from EEG trials: left hand, right hand, feet, and tongue.
-- **Input shape:** `22 x 256 x 1` per trial after the provided preprocessing.
-- **Model:** EEGNet, a compact convolutional architecture designed for EEG decoding.
-- **Dataset scope:** the provided `bci_iv2a_sub-008.mat` subject file only.
-
-This project is honest about its scale: it is not a new research contribution or a multi-subject benchmark. The goal is a clean, reproducible, portfolio-ready implementation of a real EEG classification pipeline.
+- Task: classify imagined `left hand`, `right hand`, `feet`, and `tongue` movements from single EEG trials.
+- Input: preprocessed trials with shape `22 x 256 x 1`.
+- Model: EEGNet, a compact convolutional architecture designed for EEG decoding.
+- Scope: single-subject classification on the included `data/raw/bci_iv2a_sub-008.mat` file.
 
 ## Dataset
 
-The included `.mat` file contains one subject from **BCI Competition IV 2a** with preprocessed epochs:
+The repository includes one preprocessed subject file from **BCI Competition IV 2a**:
 
 - 22 EEG channels
 - 256 time samples per trial
 - 4 motor imagery classes
-- separate train/test sessions already defined in the file
+- separate training and evaluation sessions already defined in the file
 
-The original course prompt and lecture notes are preserved in [docs/reference](docs/reference).
+## Pipeline
 
-## What the pipeline does
+The training workflow:
 
-The training pipeline reproduces the original exercise steps and adds practical engineering improvements:
-
-1. Loads the provided train/test sessions from the `.mat` file.
-2. Reshapes trials to `channels x time x 1`.
+1. Loads the training and test sessions from the subject `.mat` file.
+2. Reshapes each trial to `channels x time x 1`.
 3. Builds a stratified validation split from the training session.
-4. Standardizes all sets using the training-set mean and standard deviation.
-5. Trains EEGNet with a small, stable setup using best-checkpoint saving, early stopping, and learning-rate reduction on validation plateaus.
-6. Evaluates train, validation, and test splits.
-7. Saves metrics, confusion matrices, training curves, and spatial-filter rankings.
+4. Standardizes all inputs using training-set statistics only.
+5. Trains EEGNet with checkpointing, early stopping, and learning-rate reduction on validation plateaus.
+6. Evaluates train, validation, and test performance.
+7. Saves figures, metrics, model summary, and channel-importance outputs.
 
-## Repository structure
+## Repository Structure
 
 ```text
 .
-|- CV_SUMMARY.md
-|- README.md
-|- archive/
-|  \- original_solution/
-|- configs/
-|  \- default_run.json
-|- data/
-|  \- raw/
-|     \- bci_iv2a_sub-008.mat
-|- docs/
-|  \- reference/
-|- models/
-|- results/
-|  |- figures/
-|  |- metrics/
-|  \- experiments/
-|- scripts/
-|  \- train_model.py
-\- src/
-   \- eeg_motor_imagery/
+|-- README.md
+|-- pyproject.toml
+|-- requirements.txt
+|-- .gitignore
+|-- configs/
+|   `-- default_run.json
+|-- data/
+|   `-- raw/
+|       `-- bci_iv2a_sub-008.mat
+|-- models/
+|   `-- eegnet_best.weights.h5
+|-- results/
+|   |-- figures/
+|   `-- metrics/
+|-- scripts/
+|   `-- train_model.py
+`-- src/
+    `-- eeg_motor_imagery/
 ```
 
 ## Installation
-
-Create a virtual environment, then install the project dependencies:
 
 ```bash
 python -m venv .venv
@@ -72,11 +64,9 @@ python -m pip install -r requirements.txt
 python -m pip install -e .
 ```
 
-If TensorFlow installation varies on your machine, the rest of the stack is still standard Python ML tooling. The project uses pinned versions to make reruns more consistent.
+## Usage
 
-## How to run
-
-Full training run with the default config:
+Run the default training configuration:
 
 ```bash
 python -m eeg_motor_imagery.train --config configs/default_run.json
@@ -88,78 +78,55 @@ Equivalent script entry point:
 python scripts/train_model.py --config configs/default_run.json
 ```
 
-Shorter smoke test:
+Quick smoke test:
 
 ```bash
 python -m eeg_motor_imagery.train --config configs/default_run.json --max-epochs 20
 ```
 
-## Saved outputs
+## Outputs
 
-After a successful run, the pipeline writes:
+The default run writes:
 
-- `models/eegnet_best.weights.h5`: best checkpoint by validation loss
+- `models/eegnet_best.weights.h5`
 - `results/figures/class_histograms.png`
 - `results/figures/training_curves.png`
 - `results/figures/confusion_matrices.png`
 - `results/figures/spatial_filter_importance.png`
+- `results/metrics/metrics.json`
 - `results/metrics/training_history.csv`
 - `results/metrics/training_history.json`
-- `results/metrics/metrics.json`
 - `results/metrics/channel_importance.csv`
 - `results/metrics/model_summary.txt`
 - `results/metrics/results_summary.md`
 - `results/metrics/run_config.json`
 
-The `results/experiments/` directory keeps the small comparison runs used during cleanup of the original exercise pipeline.
+## Example Results
 
-## Evaluation outputs
+Current default run:
 
-The saved metrics include:
+- Test accuracy: `74.65%`
+- Test macro F1: `0.7459`
+- Validation accuracy: `65.52%`
 
-- accuracy
-- precision
-- recall
-- F1-score
-- per-class classification report
-- confusion matrices for train, validation, and test sets
+Per-class metrics, confusion matrices, and training history are saved under `results/metrics` and `results/figures`.
 
-## Spatial-filter interpretation
+## Spatial-Filter Interpretation
 
-EEGNet's depthwise spatial convolution acts as a bank of learned spatial filters. This project extracts those filters, takes the absolute values, averages them across learned filters, and ranks channels by their overall importance score.
+The project extracts the learned weights from EEGNet's depthwise spatial convolution, converts them to absolute values, and averages them across filters to produce a ranked channel-importance view.
 
-This is a modest interpretability view, not a causal claim about brain mechanisms. It is still useful for checking whether the network is emphasizing plausible sensor regions, such as central or centro-parietal electrodes often associated with motor imagery decoding.
-
-## Reproducibility features
-
-- fixed random seed
-- JSON config file
-- automatic directory creation
-- stable output file names
-- saved training history
-- saved best checkpoint
-- saved metrics and channel rankings
-- no hardcoded absolute dataset paths
-
-Deterministic training can still vary slightly across TensorFlow versions, hardware, and backend kernels. That limitation is normal and is documented rather than hidden.
-
-## Key results
-
-The default config now points to the best modest setting found during cleanup of the original exercise pipeline: stratified validation splitting plus Adam training with early stopping and learning-rate reduction. Run-specific metrics are written to `results/metrics/metrics.json` and summarized in `results/metrics/results_summary.md`.
+This is intended as a compact interpretability aid rather than a causal neuroscientific claim. In the current saved run, the highest-weighted channels are concentrated around central and centro-parietal regions, which is directionally consistent with motor imagery decoding.
 
 ## Limitations
 
-- single-subject scope using one provided file
-- no cross-subject generalization study
-- no hyperparameter sweep
+- single-subject scope
+- no cross-subject evaluation
+- no baseline comparison against classical methods
 - no scalp topography visualization
-- no statistical comparison against alternative models
 
-The repository keeps a small comparison between the original exercise-like run and the improved standalone setup under `results/experiments/`, but it is still a compact project rather than a benchmarking study.
+## Future Work
 
-## Future improvements
-
-- add multi-subject experiments across the full BCI IV 2a dataset
-- compare EEGNet against a simple CSP + classical classifier baseline
-- export a scalp topomap for the ranked channels
-- add lightweight tests for data loading and config handling
+- extend to multiple subjects from BCI Competition IV 2a
+- add a simple CSP + classical classifier baseline
+- add topographic visualization of channel importance
+- add lightweight unit tests for data loading and config handling
