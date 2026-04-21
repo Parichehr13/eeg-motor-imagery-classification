@@ -22,6 +22,10 @@ class RunConfig:
     reduce_lr_patience: int = 12
     reduce_lr_factor: float = 0.5
     min_learning_rate: float = 1e-5
+    run_baseline: bool = True
+    baseline_csp_components: int = 4
+    baseline_lda_solver: str = "lsqr"
+    baseline_lda_shrinkage: str | None = "auto"
 
     def to_dict(self) -> dict:
         return asdict(self)

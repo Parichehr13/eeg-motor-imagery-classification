@@ -7,6 +7,7 @@ from pathlib import Path
 
 from tensorflow import keras
 
+from .baseline import run_baseline_experiment
 from .config import RunConfig, load_config, save_config
 from .data import prepare_dataset
 from .evaluation import evaluate_model, extract_spatial_channel_importance, save_channel_importance, save_json
@@ -72,6 +73,64 @@ def _write_results_summary(
         ),
         encoding="utf-8",
     )
+
+
+def _build_comparison_row(model_name: str, metrics: dict) -> dict[str, str | float]:
+    return {
+        "model": model_name,
+        "valid_accuracy": float(metrics["valid"]["accuracy"]),
+        "valid_macro_f1": float(metrics["valid"]["f1_macro"]),
+        "test_accuracy": float(metrics["test"]["accuracy"]),
+        "test_macro_f1": float(metrics["test"]["f1_macro"]),
+        "test_macro_precision": float(metrics["test"]["precision_macro"]),
+        "test_macro_recall": float(metrics["test"]["recall_macro"]),
+    }
+
+
+def _write_comparison_table(rows: list[dict[str, str | float]], destination: str | Path) -> None:
+    output_path = Path(destination)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = [
+        "model",
+        "valid_accuracy",
+        "valid_macro_f1",
+        "test_accuracy",
+        "test_macro_f1",
+        "test_macro_precision",
+        "test_macro_recall",
+    ]
+    with output_path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def _write_comparison_markdown(rows: list[dict[str, str | float]], destination: str | Path) -> None:
+    output_path = Path(destination)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    lines = [
+        "# Model Comparison",
+        "",
+        "| Model | Val Acc | Val Macro F1 | Test Acc | Test Macro F1 | Test Macro Precision | Test Macro Recall |",
+        "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+    ]
+    for row in rows:
+        lines.append(
+            "| "
+            + " | ".join(
+                [
+                    str(row["model"]),
+                    f"{row['valid_accuracy']:.4f}",
+                    f"{row['valid_macro_f1']:.4f}",
+                    f"{row['test_accuracy']:.4f}",
+                    f"{row['test_macro_f1']:.4f}",
+                    f"{row['test_macro_precision']:.4f}",
+                    f"{row['test_macro_recall']:.4f}",
+                ]
+            )
+            + " |"
+        )
+    output_path.write_text("\n".join(lines), encoding="utf-8")
 
 
 def _build_optimizer(config: RunConfig):
@@ -160,6 +219,7 @@ def run_experiment(config: RunConfig) -> dict:
     best_model.load_weights(config.checkpoint_path)
     metrics = evaluate_model(best_model, dataset)
     save_json(metrics, config.metrics_dir / "metrics.json")
+    save_json(metrics, config.metrics_dir / "eegnet_metrics.json")
     plot_confusion_matrices(metrics, dataset.class_names, config.figures_dir / "confusion_matrices.png")
 
     channel_importance = extract_spatial_channel_importance(best_model, dataset.channel_names)
@@ -176,10 +236,19 @@ def run_experiment(config: RunConfig) -> dict:
         config.metrics_dir / "results_summary.md",
     )
 
+    baseline_results = None
+    comparison_rows = [_build_comparison_row("EEGNet", metrics)]
+    if config.run_baseline:
+        baseline_results = run_baseline_experiment(config, dataset=dataset)
+        comparison_rows.append(_build_comparison_row("CSP + LDA", baseline_results["metrics"]))
+        _write_comparison_table(comparison_rows, config.metrics_dir / "model_comparison.csv")
+        _write_comparison_markdown(comparison_rows, config.metrics_dir / "model_comparison.md")
+
     return {
         "config": config.to_dict(),
-        "metrics": metrics,
+        "metrics": {"eegnet": metrics, "baseline": baseline_results["metrics"] if baseline_results else None},
         "channel_importance": channel_importance,
+        "comparison_rows": comparison_rows,
     }
 
 
@@ -236,6 +305,11 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Override ReduceLROnPlateau patience. Use 0 to disable.",
     )
+    parser.add_argument(
+        "--skip-baseline",
+        action="store_true",
+        help="Disable the CSP + LDA baseline for this run.",
+    )
     return parser.parse_args()
 
 
@@ -269,6 +343,8 @@ def main() -> int:
         config.early_stopping_patience = args.early_stopping_patience
     if args.reduce_lr_patience is not None:
         config.reduce_lr_patience = args.reduce_lr_patience
+    if args.skip_baseline:
+        config.run_baseline = False
 
     run_experiment(config)
     return 0

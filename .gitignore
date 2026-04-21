@@ -6,10 +6,17 @@ __pycache__/
 .venv/
 .deps/
 .env
+.test_runs/
+.tmp_runtime/
+tmp*/
+*.tmp
+*.temp
+*~
 
 # OS / editor
 .DS_Store
 Thumbs.db
+Desktop.ini
 .vscode/
 .idea/
 

@@ -9,7 +9,7 @@
 - Valid split counts: {"left_hand": 7, "right_hand": 7, "feet": 8, "tongue": 7}
 - Standardization mean/std (train only): 0.000000 / 0.000010
 - Best epoch by validation loss: 147
-- Best validation loss: 0.7600
+- Best validation loss: 0.7601
 - Best validation accuracy: 0.6552
 - Test accuracy: 0.7465
 - Test macro F1: 0.7459

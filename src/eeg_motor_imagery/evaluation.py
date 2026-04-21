@@ -81,6 +81,17 @@ def evaluate_model(model: keras.Model, dataset: DatasetBundle) -> dict:
     return metrics
 
 
+def evaluate_probabilities_by_split(
+    probabilities_by_split: dict[str, np.ndarray],
+    dataset: DatasetBundle,
+) -> dict:
+    metrics = {}
+    for split_name, probabilities in probabilities_by_split.items():
+        split = getattr(dataset, split_name)
+        metrics[split_name] = evaluate_split(split, probabilities, dataset.class_names)
+    return metrics
+
+
 def extract_spatial_channel_importance(model: keras.Model, channel_names: list[str]) -> list[dict]:
     spatial_layer = None
     for layer in model.layers:

@@ -1,7 +1,7 @@
 {
   "data_path": "data/raw/bci_iv2a_sub-008.mat",
-  "model_dir": "models\\experiments\\adam_stratified",
-  "results_dir": "results\\experiments\\adam_stratified",
+  "model_dir": "models",
+  "results_dir": "results",
   "validation_ratio": 0.1,
   "validation_strategy": "stratified_shuffle",
   "optimizer_name": "adam",
@@ -13,5 +13,9 @@
   "early_stopping_patience": 20,
   "reduce_lr_patience": 8,
   "reduce_lr_factor": 0.5,
-  "min_learning_rate": 1e-05
+  "min_learning_rate": 1e-05,
+  "run_baseline": true,
+  "baseline_csp_components": 4,
+  "baseline_lda_solver": "lsqr",
+  "baseline_lda_shrinkage": "auto"
 }

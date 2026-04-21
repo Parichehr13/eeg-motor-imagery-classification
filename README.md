@@ -1,13 +1,13 @@
-# EEG Motor Imagery Classification with EEGNet
+# EEG Motor Imagery Classification with EEGNet and CSP + LDA
 
-Compact deep-learning project for 4-class EEG motor imagery classification using EEGNet on BCI Competition IV 2a subject data. The repository includes a reproducible training pipeline, saved evaluation artifacts, and a lightweight spatial-filter analysis for channel-level interpretation.
+Compact EEG decoding project for 4-class motor imagery classification on BCI Competition IV 2a subject data. The repository compares a compact deep-learning model (EEGNet) against a standard classical baseline (CSP + LDA), saves reproducible evaluation artifacts, and includes lightweight tests plus cautious channel-level interpretation.
 
 ## Overview
 
 - Task: classify imagined `left hand`, `right hand`, `feet`, and `tongue` movements from single EEG trials.
 - Input: preprocessed trials with shape `22 x 256 x 1`.
-- Model: EEGNet, a compact convolutional architecture designed for EEG decoding.
-- Scope: single-subject classification on the included `data/raw/bci_iv2a_sub-008.mat` file.
+- Models: EEGNet and a CSP + LDA baseline.
+- Scope: single-subject classification on the included `data/raw/bci_iv2a_sub-008.mat` file using the predefined train/test sessions plus a stratified validation split from the training session.
 
 ## Dataset
 
@@ -27,8 +27,9 @@ The training workflow:
 3. Builds a stratified validation split from the training session.
 4. Standardizes all inputs using training-set statistics only.
 5. Trains EEGNet with checkpointing, early stopping, and learning-rate reduction on validation plateaus.
-6. Evaluates train, validation, and test performance.
-7. Saves figures, metrics, model summary, and channel-importance outputs.
+6. Fits a CSP + LDA baseline on the exact same train/validation/test split.
+7. Evaluates train, validation, and test performance for both models.
+8. Saves figures, metrics, comparison tables, model summary, and channel-importance outputs.
 
 ## Repository Structure
 
@@ -49,7 +50,9 @@ The training workflow:
 |   |-- figures/
 |   `-- metrics/
 |-- scripts/
+|   |-- run_baseline.py
 |   `-- train_model.py
+|-- tests/
 `-- src/
     `-- eeg_motor_imagery/
 ```
@@ -66,11 +69,13 @@ python -m pip install -e .
 
 ## Usage
 
-Run the default training configuration:
+Run the default experiment configuration:
 
 ```bash
 python -m eeg_motor_imagery.train --config configs/default_run.json
 ```
+
+This runs EEGNet, the CSP + LDA baseline, and writes a shared comparison table under `results/metrics/`.
 
 Equivalent script entry point:
 
@@ -78,10 +83,22 @@ Equivalent script entry point:
 python scripts/train_model.py --config configs/default_run.json
 ```
 
-Quick smoke test:
+Run EEGNet only:
 
 ```bash
-python -m eeg_motor_imagery.train --config configs/default_run.json --max-epochs 20
+python -m eeg_motor_imagery.train --config configs/default_run.json --skip-baseline
+```
+
+Run the CSP + LDA baseline only:
+
+```bash
+python -m eeg_motor_imagery.baseline --config configs/default_run.json
+```
+
+Run the lightweight test suite:
+
+```bash
+python -m unittest discover -s tests -v
 ```
 
 ## Outputs
@@ -94,22 +111,30 @@ The default run writes:
 - `results/figures/confusion_matrices.png`
 - `results/figures/spatial_filter_importance.png`
 - `results/metrics/metrics.json`
+- `results/metrics/eegnet_metrics.json`
+- `results/metrics/csp_lda_metrics.json`
+- `results/metrics/model_comparison.csv`
+- `results/metrics/model_comparison.md`
 - `results/metrics/training_history.csv`
 - `results/metrics/training_history.json`
 - `results/metrics/channel_importance.csv`
 - `results/metrics/model_summary.txt`
 - `results/metrics/results_summary.md`
+- `results/metrics/csp_lda_summary.md`
 - `results/metrics/run_config.json`
 
 ## Example Results
 
-Current default run:
+Current saved default run on `sub-008`:
 
-- Test accuracy: `74.65%`
-- Test macro F1: `0.7459`
-- Validation accuracy: `65.52%`
+| Model | Validation accuracy | Validation macro F1 | Test accuracy | Test macro F1 | Test macro precision | Test macro recall |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| EEGNet | `65.52%` | `0.6610` | `74.65%` | `0.7459` | `0.7575` | `0.7465` |
+| CSP + LDA | `75.86%` | `0.7497` | `81.60%` | `0.8178` | `0.8248` | `0.8160` |
 
-Per-class metrics, confusion matrices, and training history are saved under `results/metrics` and `results/figures`.
+The comparison table is saved in machine-readable form at `results/metrics/model_comparison.csv`.
+
+This baseline matters because motor imagery EEG is often evaluated with CSP-based classical pipelines. Reporting both models makes it easier to judge whether EEGNet is genuinely adding value on this split. In the current saved run, the classical baseline outperforms EEGNet, which is a useful and scientifically honest result.
 
 ## Spatial-Filter Interpretation
 
@@ -121,12 +146,13 @@ This is intended as a compact interpretability aid rather than a causal neurosci
 
 - single-subject scope
 - no cross-subject evaluation
-- no baseline comparison against classical methods
-- no scalp topography visualization
+- one predefined subject split rather than repeated resampling or nested cross-validation
+- interpretability is limited to spatial-filter weight inspection rather than source-localized neurophysiological analysis
+- no scalp topography visualization yet
 
 ## Future Work
 
 - extend to multiple subjects from BCI Competition IV 2a
-- add a simple CSP + classical classifier baseline
-- add topographic visualization of channel importance
-- add lightweight unit tests for data loading and config handling
+- compare against additional classical baselines such as filter-bank CSP or Riemannian pipelines
+- add topographic visualization of channel importance with electrode coordinates
+- add multi-subject aggregate reporting with mean and standard deviation across subjects
