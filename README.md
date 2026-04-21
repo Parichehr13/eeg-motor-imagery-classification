@@ -1,6 +1,6 @@
 # EEG Motor Imagery Classification with EEGNet and CSP + LDA
 
-Compact EEG decoding project for 4-class motor imagery classification on BCI Competition IV 2a subject data. The repository compares a compact deep-learning model (EEGNet) against a standard classical baseline (CSP + LDA), saves reproducible evaluation artifacts, and includes lightweight tests plus cautious channel-level interpretation.
+Compact EEG decoding project for 4-class motor imagery classification on BCI Competition IV 2a subject data. The repository compares EEGNet against a standard CSP + LDA baseline, saves reproducible evaluation artifacts, and includes lightweight tests plus cautious channel-level interpretation.
 
 ## Overview
 
@@ -59,9 +59,9 @@ The training workflow:
 
 ## Installation
 
-```bash
+```powershell
 python -m venv .venv
-.venv\Scripts\activate
+.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 python -m pip install -e .
@@ -132,9 +132,9 @@ Current saved default run on `sub-008`:
 | EEGNet | `65.52%` | `0.6610` | `74.65%` | `0.7459` | `0.7575` | `0.7465` |
 | CSP + LDA | `75.86%` | `0.7497` | `81.60%` | `0.8178` | `0.8248` | `0.8160` |
 
-The comparison table is saved in machine-readable form at `results/metrics/model_comparison.csv`.
+The machine-readable comparison table is saved at `results/metrics/model_comparison.csv`.
 
-This baseline matters because motor imagery EEG is often evaluated with CSP-based classical pipelines. Reporting both models makes it easier to judge whether EEGNet is genuinely adding value on this split. In the current saved run, the classical baseline outperforms EEGNet, which is a useful and scientifically honest result.
+This baseline matters because motor imagery EEG is often evaluated with CSP-based classical pipelines. Reporting both models makes it easier to judge whether EEGNet adds value on this split. In the current saved run, the classical baseline outperforms EEGNet, which is a useful and scientifically honest result.
 
 ## Spatial-Filter Interpretation
 
@@ -148,7 +148,7 @@ This is intended as a compact interpretability aid rather than a causal neurosci
 - no cross-subject evaluation
 - one predefined subject split rather than repeated resampling or nested cross-validation
 - interpretability is limited to spatial-filter weight inspection rather than source-localized neurophysiological analysis
-- no scalp topography visualization yet
+- no scalp-topography visualization yet
 
 ## Future Work
 
