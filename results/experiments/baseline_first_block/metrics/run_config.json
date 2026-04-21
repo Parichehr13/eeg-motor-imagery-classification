@@ -1,0 +1,11 @@
+{
+  "data_path": "data/raw/bci_iv2a_sub-008.mat",
+  "model_dir": "models",
+  "results_dir": "results",
+  "validation_ratio": 0.1,
+  "learning_rate": 0.001,
+  "momentum": 0.9,
+  "batch_size": 64,
+  "max_epochs": 150,
+  "random_seed": 42
+}

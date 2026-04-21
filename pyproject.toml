@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eeg-motor-imagery"
+version = "0.1.0"
+description = "Standalone EEGNet pipeline for single-subject motor imagery classification on BCI Competition IV 2a."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "matplotlib==3.9.2",
+  "numpy==1.26.4",
+  "scikit-learn==1.5.2",
+  "scipy==1.13.1",
+  "tensorflow==2.18.0",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+

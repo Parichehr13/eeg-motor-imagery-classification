@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.venv/
+.deps/
+.env
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Generated outputs
+models/*.keras
+models/*.weights.h5
+results/figures/*.png
+results/metrics/*.json
+results/metrics/*.csv
+results/metrics/*.md
+results/metrics/*.txt
